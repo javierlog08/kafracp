@@ -25,9 +25,9 @@ return [
                 ],
             ],
         ],
-        'errorHandler' => [
+        /*'errorHandler' => [
             'errorAction' => 'site/error',
-        ],
+        ],*/
     ],
     'params' => $params,
 ];
