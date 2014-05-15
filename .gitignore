@@ -1,0 +1,3 @@
+# Ignoring local configuration files
+/backend/config/*local.php
+/frontend/config/*local.php
