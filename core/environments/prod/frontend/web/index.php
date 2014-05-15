@@ -10,7 +10,15 @@ $config = yii\helpers\ArrayHelper::merge(
     require(__DIR__ . '/../../common/config/main.php'),
     require(__DIR__ . '/../../common/config/main-local.php'),
     require(__DIR__ . '/../config/main.php'),
-    require(__DIR__ . '/../config/main-local.php')
+    require(__DIR__ . '/../config/main-local.php'),
+
+    /*--------------------------------------------------------------
+    | Kafracp Frontend Configuration files
+	|--------------------------------------------------------------*/
+    require(__DIR__ . '/../../../frontend/config/config-local.php'),
+    require(__DIR__ . '/../../../frontend/config/config.php')
+
+    //--------------------------------------------------------------
 );
 
 $application = new yii\web\Application($config);
