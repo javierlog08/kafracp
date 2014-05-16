@@ -54,6 +54,7 @@ foreach($config['themes'] as $i=>$theme) {
 }
 
 $core = [
+	'defaultRoute'=>'/home/default/index',
 	'modules' => $modules,
     'components' => [
 	    'view' => [
