@@ -15,7 +15,6 @@ $config = yii\helpers\ArrayHelper::merge(
     /*--------------------------------------------------------------
     | Kafracp Frontend Configuration files
 	|--------------------------------------------------------------*/
-    require(__DIR__ . '/../../../backend/config/config-local.php'),
     require(__DIR__ . '/../../../backend/config/config.php')
 
     //--------------------------------------------------------------
