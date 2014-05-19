@@ -1,65 +1,97 @@
 <?php
+
 namespace common\models;
 
-use yii\base\NotSupportedException;
+use Yii;
 use yii\db\ActiveRecord;
-use yii\helpers\Security;
 use yii\web\IdentityInterface;
+use yii\base\NotSupportedException;
 
 /**
- * User model
+ * This is the model class for table "login".
  *
- * @property integer $id
- * @property string $username
- * @property string $password_hash
- * @property string $password_reset_token
+ * @property string $account_id
+ * @property string $userid
+ * @property string $user_pass
+ * @property string $sex
  * @property string $email
- * @property string $auth_key
- * @property integer $role
- * @property integer $status
- * @property integer $created_at
- * @property integer $updated_at
- * @property string $password write-only password
+ * @property integer $group_id
+ * @property string $state
+ * @property string $unban_time
+ * @property string $expiration_time
+ * @property string $logincount
+ * @property string $lastlogin
+ * @property string $last_ip
+ * @property string $birthdate
+ * @property integer $character_slots
+ * @property string $pincode
+ * @property string $pincode_change
  */
 class User extends ActiveRecord implements IdentityInterface
 {
-    const STATUS_DELETED = 0;
-    const STATUS_ACTIVE = 10;
-
-    const ROLE_USER = 10;
+    public $rememberMe = true;
+    /**
+     * @inheritdoc
+     */
+    public static function tableName()
+    {
+        return 'login';
+    }
 
     /**
      * @inheritdoc
      */
-    public function behaviors()
+    public function rules()
     {
         return [
-            'timestamp' => [
-                'class' => 'yii\behaviors\TimestampBehavior',
-                'attributes' => [
-                    ActiveRecord::EVENT_BEFORE_INSERT => ['created_at', 'updated_at'],
-                    ActiveRecord::EVENT_BEFORE_UPDATE => ['updated_at'],
-                ],
-            ],
+            [['sex'], 'string'],
+            [['group_id', 'state', 'unban_time', 'expiration_time', 'logincount', 'character_slots', 'pincode_change'], 'integer'],
+            [['lastlogin', 'birthdate'], 'safe'],
+            [['userid'], 'string', 'max' => 23],
+            [['user_pass'], 'string', 'max' => 32],
+            [['email'], 'string', 'max' => 39],
+            [['last_ip'], 'string', 'max' => 100],
+            [['pincode'], 'string', 'max' => 4],
+            ['rememberMe', 'boolean'],
+            [['userid', 'user_pass'], 'required'],
         ];
     }
 
     /**
-      * @inheritdoc
-      */
-     public function rules()
-     {
-         return [
-             ['status', 'default', 'value' => self::STATUS_ACTIVE],
-             ['status', 'in', 'range' => [self::STATUS_ACTIVE, self::STATUS_DELETED]],
+     * @inheritdoc
+     */
+    public function attributeLabels()
+    {
+        return [
+            'account_id' => 'Account ID',
+            'userid' => 'Userid',
+            'user_pass' => 'User Pass',
+            'sex' => 'Sex',
+            'email' => 'Email',
+            'group_id' => 'Group ID',
+            'state' => 'State',
+            'unban_time' => 'Unban Time',
+            'expiration_time' => 'Expiration Time',
+            'logincount' => 'Logincount',
+            'lastlogin' => 'Lastlogin',
+            'last_ip' => 'Last Ip',
+            'birthdate' => 'Birthdate',
+            'character_slots' => 'Character Slots',
+            'pincode' => 'Pincode',
+            'pincode_change' => 'Pincode Change',
+        ];
+    }
 
-             ['role', 'default', 'value' => self::ROLE_USER],
-             ['role', 'in', 'range' => [self::ROLE_USER]],
-         ];
-     }
+    public function getUserName()
+    {
+        return $this->userid;
+    }
 
     /**
-     * @inheritdoc
+     * Finds an identity by the given ID.
+     *
+     * @param string|integer $id the ID to be looked for
+     * @return IdentityInterface|null the identity object that matches the given ID.
      */
     public static function findIdentity($id)
     {
@@ -67,7 +99,10 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * @inheritdoc
+     * Finds an identity by the given token.
+     *
+     * @param string $token the token to be looked for
+     * @return IdentityInterface|null the identity object that matches the given token.
      */
     public static function findIdentityByAccessToken($token, $type = null)
     {
@@ -82,41 +117,19 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public static function findByUsername($username)
     {
-        return static::findOne(['username' => $username, 'status' => self::STATUS_ACTIVE]);
+        return static::findOne(['userid' => $username]);
     }
 
     /**
-     * Finds user by password reset token
-     *
-     * @param  string      $token password reset token
-     * @return static|null
-     */
-    public static function findByPasswordResetToken($token)
-    {
-        $expire = \Yii::$app->params['user.passwordResetTokenExpire'];
-        $parts = explode('_', $token);
-        $timestamp = (int) end($parts);
-        if ($timestamp + $expire < time()) {
-            // token expired
-            return null;
-        }
-
-        return static::findOne([
-            'password_reset_token' => $token,
-            'status' => self::STATUS_ACTIVE,
-        ]);
-    }
-
-    /**
-     * @inheritdoc
+     * @return int|string current user ID
      */
     public function getId()
     {
-        return $this->getPrimaryKey();
+        return $this->account_id;
     }
 
     /**
-     * @inheritdoc
+     * @return string current user auth key
      */
     public function getAuthKey()
     {
@@ -124,7 +137,8 @@ class User extends ActiveRecord implements IdentityInterface
     }
 
     /**
-     * @inheritdoc
+     * @param string $authKey
+     * @return boolean if auth key is valid for current user
      */
     public function validateAuthKey($authKey)
     {
@@ -139,7 +153,15 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function validatePassword($password)
     {
-        return Security::validatePassword($password, $this->password_hash);
+        if(Yii::$app->params["passwordMD5"]) {
+            if(md5($password) === $this->user_pass)
+                return true;
+        } else {
+            if($password === $this->user_pass)
+                return true;
+        }
+
+        return false;
     }
 
     /**
@@ -149,30 +171,6 @@ class User extends ActiveRecord implements IdentityInterface
      */
     public function setPassword($password)
     {
-        $this->password_hash = Security::generatePasswordHash($password);
-    }
-
-    /**
-     * Generates "remember me" authentication key
-     */
-    public function generateAuthKey()
-    {
-        $this->auth_key = Security::generateRandomKey();
-    }
-
-    /**
-     * Generates new password reset token
-     */
-    public function generatePasswordResetToken()
-    {
-        $this->password_reset_token = Security::generateRandomKey() . '_' . time();
-    }
-
-    /**
-     * Removes password reset token
-     */
-    public function removePasswordResetToken()
-    {
-        $this->password_reset_token = null;
+        //$this->password_hash = Security::generatePasswordHash($password);
     }
 }

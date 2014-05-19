@@ -71,7 +71,7 @@ $core = [
 	            'errorAction' => 'home/admin/error',
 	     ],
 	    'user' => [
-	    	'identityClass' => 'common\models\Login',
+	    	'identityClass' => 'common\models\User',
 			'enableAutoLogin' => false,
 			'loginUrl' => ['auth/user/login'],
 		],
